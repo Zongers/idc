@@ -184,7 +184,6 @@
             color: var(--dark-text);
         }
 
-        /* Styles for checkboxes instead of sliders */
         .checkbox-container {
             display: flex;
             justify-content: center;
@@ -210,7 +209,6 @@
             border-top-color: var(--dark-border);
         }
 
-        /* New styles for the copy button */
         .output-toolbar {
             display: flex;
             justify-content: flex-end;
@@ -281,7 +279,6 @@
             color: var(--dark-text);
         }
         
-        /* Make table headers inside modals sticky */
         .modal-table-container {
             max-height: 60vh;
             overflow-y: auto;
@@ -293,16 +290,15 @@
         }
 
         .modal-table-container thead th {
-            position: sticky;
-            top: 0;
-            background-color: rgba(152,204,78,0.1);
+            background-color: var(--primary);
+            color: white;
             z-index: 11;
         }
 
         body.dark-mode .modal-table-container thead th {
-            background-color: rgba(152,204,78,0.2);
+            background-color: var(--dark);
+            color: var(--dark-text);
         }
-
         .close {
             color: #aaa;
             float: right;
@@ -372,7 +368,6 @@
             color: #ff4d4d;
         }
 
-        /* Theme switcher */
         .theme-switcher {
             position: fixed;
             top: 20px;
@@ -415,7 +410,6 @@
     </style>
 </head>
 <body>
-    <!-- Theme switcher button -->
     <div class="theme-switcher">
         <button class="theme-toggle" onclick="toggleTheme()">
             <i class="fas fa-moon"></i>
@@ -512,7 +506,6 @@
     </div>
 
     <script>
-        // Default agents data
         let defaultAgents = [
             { id: "44715", name: "Awais Ur Rehman" },
             { id: "48618", name: "Abbas Raheem" },
@@ -545,36 +538,34 @@
             { id: "48668", name: "Romeesa Shaheen" }
         ];
 
-        // Slot definitions
         const slots = [
             { id: "beforeProMax", name: "Before Pro Max" },
             { id: "afterMBB", name: "After MBB" },
             { id: "slot1245", name: "12:45 Slot" },
             { id: "beforeMY5", name: "Before MY5" },
-            { id: "afterMY5", name: "After MY5" }
+            { id: "afterMY5", name: "After MY5" },
+            { id: "WEE", name: "WEE" } 
         ];
 
-        // Current selections (loaded from localStorage or defaults)
         let currentSelections = {
             beforeProMax: [],
             afterMBB: [],
             slot1245: [],
             beforeMY5: [],
-            afterMY5: []
+            afterMY5: [],
+            WEE: [] 
         };
 
-        // Default template
         let defaultTemplate = {
             beforeProMax: ["2681", "44715", "43207", "2267", "48618", "46958", "48396", "2547", "4937", "54870", "43810"],
             afterMBB: ["48362", "2267", "48618", "2413", "48396", "43930", "48638", "48795", "48863"],
             slot1245: ["2267"],
             beforeMY5: ["2267", "2681", "48396", "43207", "44715", "48863", "48362", "2547", "43930"],
-            afterMY5: ["48362", "48618", "48396", "2267"]
+            afterMY5: ["48362", "48618", "48396", "2267"],
+            WEE: [] 
         };
 
-        // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
-            // Try to load saved data from localStorage
             const savedAgents = localStorage.getItem('dialerAgents');
             const savedSelections = localStorage.getItem('dialerSelections');
             const savedTemplate = localStorage.getItem('dialerTemplate');
@@ -587,7 +578,6 @@
             if (savedSelections) {
                 currentSelections = JSON.parse(savedSelections);
             } else {
-                // Initialize with default template if no saved selections
                 currentSelections = JSON.parse(JSON.stringify(defaultTemplate));
             }
             
@@ -595,16 +585,14 @@
                 defaultTemplate = JSON.parse(savedTemplate);
             }
 
-            // Apply saved theme
             if (savedTheme === 'dark') {
                 document.body.classList.add('dark-mode');
                 document.querySelector('.theme-toggle i').className = 'fas fa-sun';
             }
             
             loadAgentsTable();
-            compileIDs(); // Show initial output
+            compileIDs();
 
-            // Add event listeners for closing modals on outside click
             document.getElementById('editAgentsModal').addEventListener('click', function(event) {
                 if (event.target === this) {
                     closeModal('editAgentsModal');
@@ -617,7 +605,6 @@
             });
         });
 
-        // Toggle dark/light theme
         function toggleTheme() {
             const body = document.body;
             const themeIcon = document.querySelector('.theme-toggle i');
@@ -633,31 +620,26 @@
             }
         }
 
-        // Load agents into the main table with slot columns
         function loadAgentsTable() {
             const tableHeader = document.getElementById('agentsTableHeader');
             const tableBody = document.getElementById('agentsTableBody');
             
-            // Create table header
             tableHeader.innerHTML = `
                 <th>Agent ID</th>
                 <th>Agent Name</th>
                 ${slots.map(slot => `<th>${slot.name}</th>`).join('')}
             `;
             
-            // Create table body
             tableBody.innerHTML = '';
             
             defaultAgents.forEach(agent => {
                 const row = document.createElement('tr');
                 
-                // Agent ID and Name
                 row.innerHTML = `
                     <td>${agent.id}</td>
                     <td>${agent.name}</td>
                 `;
                 
-                // Add checkboxes for each slot
                 slots.forEach(slot => {
                     const td = document.createElement('td');
                     const checkboxId = `checkbox_${agent.id}_${slot.id}`;
@@ -666,7 +648,7 @@
                         <div class="checkbox-container">
                             <input type="checkbox" id="${checkboxId}" 
                                    onchange="updateSelection('${agent.id}', '${slot.id}', this.checked)"
-                                   ${currentSelections[slot.id].includes(agent.id) ? 'checked' : ''}>
+                                   ${currentSelections[slot.id] && currentSelections[slot.id].includes(agent.id) ? 'checked' : ''}>
                         </div>
                     `;
                     
@@ -677,8 +659,10 @@
             });
         }
 
-        // Update selection when checkbox is toggled
         function updateSelection(agentId, slot, isChecked) {
+            if (!currentSelections[slot]) {
+                currentSelections[slot] = [];
+            }
             if (isChecked) {
                 if (!currentSelections[slot].includes(agentId)) {
                     currentSelections[slot].push(agentId);
@@ -687,29 +671,23 @@
                 currentSelections[slot] = currentSelections[slot].filter(id => id !== agentId);
             }
             
-            // Save to localStorage
             localStorage.setItem('dialerSelections', JSON.stringify(currentSelections));
             
-            // Update output
             compileIDs();
         }
 
-        // Compile the output
         function compileIDs() {
-            // Remove duplicates from each slot
             for (const slot in currentSelections) {
                 currentSelections[slot] = [...new Set(currentSelections[slot])];
             }
             
-            // Generate output
             const output = slots.map(slot => {
-                return `${slot.name}\n\n${currentSelections[slot.id].join(',')}\n`;
+                return `${slot.name}\n\n${(currentSelections[slot.id] || []).join(',')}\n`;
             }).join('\n');
             
             document.getElementById('outputContent').textContent = output;
         }
 
-        // Copy output to clipboard
         function copyOutput() {
             const output = document.getElementById('outputContent').textContent.trim();
             
@@ -730,7 +708,6 @@
             });
         }
 
-        // Clear all selections and reset to defaults
         function clearSelections() {
             if (confirm('Are you sure you want to clear all selections? This will reset to default template.')) {
                 currentSelections = JSON.parse(JSON.stringify(defaultTemplate));
@@ -740,7 +717,6 @@
             }
         }
 
-        // Open edit agents modal
         function openEditAgentsModal() {
             const modal = document.getElementById('editAgentsModal');
             const tableBody = document.getElementById('editAgentsTableBody');
@@ -762,13 +738,11 @@
             modal.style.display = 'block';
         }
 
-        // Open edit template modal
         function openEditTemplateModal() {
             const modal = document.getElementById('editTemplateModal');
             const tableHeader = document.getElementById('editTemplateTableHeader');
             const tableBody = document.getElementById('editTemplateTableBody');
             
-            // Create table header
             tableHeader.innerHTML = `
                 <tr>
                     <th>Agent ID</th>
@@ -777,19 +751,16 @@
                 </tr>
             `;
             
-            // Create table body
             tableBody.innerHTML = '';
             
             defaultAgents.forEach(agent => {
                 const row = document.createElement('tr');
                 
-                // Agent ID and Name
                 row.innerHTML = `
                     <td>${agent.id}</td>
                     <td>${agent.name}</td>
                 `;
                 
-                // Add checkboxes for each slot
                 slots.forEach(slot => {
                     const td = document.createElement('td');
                     const checkboxId = `template_checkbox_${agent.id}_${slot.id}`;
@@ -797,7 +768,7 @@
                     td.innerHTML = `
                         <div class="checkbox-container">
                             <input type="checkbox" id="${checkboxId}" 
-                                   ${defaultTemplate[slot.id].includes(agent.id) ? 'checked' : ''}>
+                                   ${defaultTemplate[slot.id] && defaultTemplate[slot.id].includes(agent.id) ? 'checked' : ''}>
                         </div>
                     `;
                     
@@ -810,12 +781,10 @@
             modal.style.display = 'block';
         }
 
-        // Close modal
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
         }
 
-        // Add new agent
         function addNewAgent() {
             const idInput = document.getElementById('newAgentId');
             const nameInput = document.getElementById('newAgentName');
@@ -836,7 +805,6 @@
             defaultAgents.push({ id, name });
             localStorage.setItem('dialerAgents', JSON.stringify(defaultAgents));
             
-            // Update the table
             const tableBody = document.getElementById('editAgentsTableBody');
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -849,16 +817,13 @@
             `;
             tableBody.appendChild(row);
             
-            // Clear inputs
             idInput.value = '';
             nameInput.value = '';
             
-            // Reload main table
             loadAgentsTable();
             compileIDs();
         }
 
-        // Edit existing agent
         function editAgent(index) {
             const agent = defaultAgents[index];
             const newId = prompt('Edit Agent ID:', agent.id);
@@ -867,24 +832,21 @@
             const newName = prompt('Edit Agent Name:', agent.name);
             if (newName === null) return;
             
-            // Update all selections with new ID
             const oldId = agent.id;
             agent.id = newId.trim();
             agent.name = newName.trim();
             
-            // Update current selections
             for (const slot in currentSelections) {
-                const index = currentSelections[slot].indexOf(oldId);
-                if (index !== -1) {
-                    currentSelections[slot][index] = newId.trim();
+                const idx = (currentSelections[slot] || []).indexOf(oldId);
+                if (idx !== -1) {
+                    currentSelections[slot][idx] = newId.trim();
                 }
             }
             
-            // Update default template
             for (const slot in defaultTemplate) {
-                const index = defaultTemplate[slot].indexOf(oldId);
-                if (index !== -1) {
-                    defaultTemplate[slot][index] = newId.trim();
+                const idx = (defaultTemplate[slot] || []).indexOf(oldId);
+                if (idx !== -1) {
+                    defaultTemplate[slot][idx] = newId.trim();
                 }
             }
             
@@ -892,52 +854,40 @@
             localStorage.setItem('dialerSelections', JSON.stringify(currentSelections));
             localStorage.setItem('dialerTemplate', JSON.stringify(defaultTemplate));
             
-            // Refresh all tables
             openEditAgentsModal();
             loadAgentsTable();
             compileIDs();
         }
 
-        // Delete agent
         function deleteAgent(index) {
             if (confirm('Are you sure you want to delete this agent? This will remove them from all selections.')) {
                 const agentId = defaultAgents[index].id;
                 defaultAgents.splice(index, 1);
                 
-                // Remove from all selections
                 for (const slot in currentSelections) {
-                    currentSelections[slot] = currentSelections[slot].filter(id => id !== agentId);
+                    currentSelections[slot] = (currentSelections[slot] || []).filter(id => id !== agentId);
                 }
                 
-                // Remove from default template
                 for (const slot in defaultTemplate) {
-                    defaultTemplate[slot] = defaultTemplate[slot].filter(id => id !== agentId);
+                    defaultTemplate[slot] = (defaultTemplate[slot] || []).filter(id => id !== agentId);
                 }
                 
                 localStorage.setItem('dialerAgents', JSON.stringify(defaultAgents));
                 localStorage.setItem('dialerSelections', JSON.stringify(currentSelections));
                 localStorage.setItem('dialerTemplate', JSON.stringify(defaultTemplate));
                 
-                // Refresh all tables
                 openEditAgentsModal();
                 loadAgentsTable();
                 compileIDs();
             }
         }
 
-        // Save default template
         function saveDefaultTemplate() {
-            // Get all checkboxes and update the default template
             const checkboxes = document.querySelectorAll('#editTemplateTableBody input[type="checkbox"]');
             
-            // Reset the template
-            defaultTemplate = {
-                beforeProMax: [],
-                afterMBB: [],
-                slot1245: [],
-                beforeMY5: [],
-                afterMY5: []
-            };
+            slots.forEach(slot => {
+                defaultTemplate[slot.id] = [];
+            });
             
             checkboxes.forEach(checkbox => {
                 const parts = checkbox.id.split('_');
@@ -945,18 +895,19 @@
                 const slot = parts[3];
                 
                 if (checkbox.checked) {
+                    if (!defaultTemplate[slot]) {
+                        defaultTemplate[slot] = [];
+                    }
                     defaultTemplate[slot].push(agentId);
                 }
             });
             
-            // Remove duplicates
             for (const slot in defaultTemplate) {
                 defaultTemplate[slot] = [...new Set(defaultTemplate[slot])];
             }
             
             localStorage.setItem('dialerTemplate', JSON.stringify(defaultTemplate));
             
-            // Close modal
             closeModal('editTemplateModal');
         }
     </script>
