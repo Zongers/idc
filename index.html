@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dialer IDs Compiler</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #98cc4e;
+            --secondary: #fb0088;
+            --light: #FFFFFF;
+            --dark: #292929;
+            --bg: #F7F7F7;
+            --border: #e0e0e0;
+            --pink: #ffd6e7;
+            --dark-bg: #333333;
+            --dark-border: #444444;
+            --dark-text: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            background-color: var(--dark-bg);
+            color: var(--dark-text);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        body.dark-mode .header p {
+            color: #aaa;
+        }
+
+        .spreadsheet-container {
+            background: var(--light);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 1200px;
+            border: 1px solid rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+
+        body.dark-mode .spreadsheet-container {
+            background: var(--dark-bg);
+            border-color: var(--dark-border);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.7rem 1.2rem;
+            border-radius: 6px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            position: relative;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: var(--dark);
+        }
+
+        body.dark-mode .btn-secondary {
+            background: #444;
+            color: var(--dark-text);
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        body.dark-mode .btn-secondary:hover {
+            background: #555;
+        }
+
+        .btn-danger {
+            background: #ff4d4d;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff1a1a;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 1rem;
+            table-layout: fixed;
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 0.5rem;
+            text-align: left;
+            min-width: 100px;
+            word-wrap: break-word;
+        }
+
+        body.dark-mode th, 
+        body.dark-mode td {
+            border-color: var(--dark-border);
+        }
+
+        th {
+            background-color: rgba(152,204,78,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        body.dark-mode th {
+            background-color: rgba(152,204,78,0.2);
+        }
+
+        td {
+            background-color: white;
+            min-height: 1.5em;
+        }
+
+        body.dark-mode td {
+            background-color: var(--dark-bg);
+            color: var(--dark-text);
+        }
+
+        /* Styles for checkboxes instead of sliders */
+        .checkbox-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .output-container {
+            position: relative;
+            margin-top: 2rem;
+            border-top: 1px solid var(--border);
+            padding-top: 1.5rem;
+        }
+
+        body.dark-mode .output-container {
+            border-top-color: var(--dark-border);
+        }
+
+        /* New styles for the copy button */
+        .output-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 0.5rem;
+        }
+
+        .copy-btn {
+            background: var(--primary);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: var(--secondary);
+        }
+
+        .output-content {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-family: monospace;
+            white-space: pre-wrap;
+            position: relative;
+        }
+
+        body.dark-mode .output-content {
+            background-color: #2a2a2a;
+            border-color: var(--dark-border);
+            color: var(--dark-text);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: var(--light);
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        body.dark-mode .modal-content {
+            background-color: var(--dark-bg);
+            color: var(--dark-text);
+        }
+        
+        /* Make table headers inside modals sticky */
+        .modal-table-container {
+            max-height: 60vh;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+
+        .modal-table-container table {
+            margin-top: 0;
+        }
+
+        .modal-table-container thead th {
+            position: sticky;
+            top: 0;
+            background-color: rgba(152,204,78,0.1);
+            z-index: 11;
+        }
+
+        body.dark-mode .modal-table-container thead th {
+            background-color: rgba(152,204,78,0.2);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: var(--dark);
+        }
+
+        body.dark-mode .close {
+            color: #888;
+        }
+
+        body.dark-mode .close:hover {
+            color: var(--dark-text);
+        }
+
+        .modal-title {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .add-agent-form {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .add-agent-form input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.7rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background-color: var(--light);
+            color: var(--dark);
+        }
+
+        body.dark-mode .add-agent-form input {
+            background-color: #444;
+            border-color: var(--dark-border);
+            color: var(--dark-text);
+        }
+
+        .action-icons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-icon {
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .edit-icon {
+            color: var(--primary);
+        }
+
+        .delete-icon {
+            color: #ff4d4d;
+        }
+
+        /* Theme switcher */
+        .theme-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .theme-toggle {
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        body.dark-mode .theme-toggle {
+            background: var(--dark-bg);
+            border-color: var(--dark-border);
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .add-agent-form {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme switcher button -->
+    <div class="theme-switcher">
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <div class="header">
+        <h1><i class="fas fa-id-card"></i> Dialer IDs Compiler</h1>
+        <p>Compile agent IDs for different dialer slots</p>
+    </div>
+
+    <div class="spreadsheet-container">
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="compileIDs()">
+                <i class="fas fa-cogs"></i> Compile
+            </button>
+            <button class="btn btn-secondary" onclick="openEditAgentsModal()">
+                <i class="fas fa-users"></i> Edit Default Agents
+            </button>
+            <button class="btn btn-secondary" onclick="openEditTemplateModal()">
+                <i class="fas fa-edit"></i> Edit Default Template
+            </button>
+            <button class="btn btn-danger" onclick="clearSelections()">
+                <i class="fas fa-trash-alt"></i> Clear All
+            </button>
+        </div>
+
+        <table id="agentsTable">
+            <thead>
+                <tr id="agentsTableHeader">
+                    </tr>
+            </thead>
+            <tbody id="agentsTableBody">
+                </tbody>
+        </table>
+
+        <div class="output-container">
+            <div class="output-toolbar">
+                <button class="copy-btn" onclick="copyOutput()">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="output-content" id="outputContent">
+                </div>
+        </div>
+    </div>
+
+    <div id="editAgentsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editAgentsModal')">&times;</span>
+            <h3 class="modal-title"><i class="fas fa-users"></i> Edit Default Agents</h3>
+            <div class="modal-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Agent ID</th>
+                            <th>Agent Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="editAgentsTableBody">
+                        </tbody>
+                </table>
+            </div>
+            <div class="add-agent-form">
+                <input type="text" id="newAgentId" placeholder="Agent ID">
+                <input type="text" id="newAgentName" placeholder="Agent Name">
+                <button class="btn btn-primary" onclick="addNewAgent()">
+                    <i class="fas fa-plus"></i> Add Agent
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editTemplateModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editTemplateModal')">&times;</span>
+            <h3 class="modal-title"><i class="fas fa-edit"></i> Edit Default Template</h3>
+            <p>Select which agents should be included in each slot by default:</p>
+            <div class="modal-table-container">
+                <table>
+                    <thead id="editTemplateTableHeader">
+                        </thead>
+                    <tbody id="editTemplateTableBody">
+                        </tbody>
+                </table>
+            </div>
+            <div style="margin-top: 20px; text-align: center;">
+                <button class="btn btn-primary" onclick="saveDefaultTemplate()">
+                    <i class="fas fa-save"></i> Save Default Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default agents data
+        let defaultAgents = [
+            { id: "44715", name: "Awais Ur Rehman" },
+            { id: "48618", name: "Abbas Raheem" },
+            { id: "48362", name: "Safoora Nawaz" },
+            { id: "46958", name: "Khadija Sarwar" },
+            { id: "43207", name: "Mehreen Akhter" },
+            { id: "2413", name: "Muhammad Shahbaz" },
+            { id: "43810", name: "Syed Hamza Ahmed" },
+            { id: "2681", name: "Maryum Afshan" },
+            { id: "48863", name: "Saqlain Mushtaq" },
+            { id: "2547", name: "Shahnaz Gul" },
+            { id: "48795", name: "Amamah Rehman" },
+            { id: "4937", name: "Ali Raza" },
+            { id: "48396", name: "Raheela Butt" },
+            { id: "2267", name: "Salma Hameed - TC" },
+            { id: "54870", name: "Rizwan Ali" },
+            { id: "48718", name: "Ahsan Mazhar" },
+            { id: "45992", name: "Saima Sher Muhammad" },
+            { id: "49087", name: "Iqra Rasool" },
+            { id: "48638", name: "Nadia Manzoor" },
+            { id: "48194", name: "Ahmed Jahangir Baig" },
+            { id: "43930", name: "Rida Fatima" },
+            { id: "48123", name: "Aqsa Noreen" },
+            { id: "49184", name: "Zeeshan Shakoor" },
+            { id: "49021", name: "Aqsa Baig" },
+            { id: "43304", name: "Asif Ali" },
+            { id: "49219", name: "Asma Anwar Khan" },
+            { id: "49218", name: "Aleena Ahmed" },
+            { id: "46351", name: "Maryam Mukhtiar" },
+            { id: "48668", name: "Romeesa Shaheen" }
+        ];
+
+        // Slot definitions
+        const slots = [
+            { id: "beforeProMax", name: "Before Pro Max" },
+            { id: "afterMBB", name: "After MBB" },
+            { id: "slot1245", name: "12:45 Slot" },
+            { id: "beforeMY5", name: "Before MY5" },
+            { id: "afterMY5", name: "After MY5" }
+        ];
+
+        // Current selections (loaded from localStorage or defaults)
+        let currentSelections = {
+            beforeProMax: [],
+            afterMBB: [],
+            slot1245: [],
+            beforeMY5: [],
+            afterMY5: []
+        };
+
+        // Default template
+        let defaultTemplate = {
+            beforeProMax: ["2681", "44715", "43207", "2267", "48618", "46958", "48396", "2547", "4937", "54870", "43810"],
+            afterMBB: ["48362", "2267", "48618", "2413", "48396", "43930", "48638", "48795", "48863"],
+            slot1245: ["2267"],
+            beforeMY5: ["2267", "2681", "48396", "43207", "44715", "48863", "48362", "2547", "43930"],
+            afterMY5: ["48362", "48618", "48396", "2267"]
+        };
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Try to load saved data from localStorage
+            const savedAgents = localStorage.getItem('dialerAgents');
+            const savedSelections = localStorage.getItem('dialerSelections');
+            const savedTemplate = localStorage.getItem('dialerTemplate');
+            const savedTheme = localStorage.getItem('dialerTheme');
+            
+            if (savedAgents) {
+                defaultAgents = JSON.parse(savedAgents);
+            }
+            
+            if (savedSelections) {
+                currentSelections = JSON.parse(savedSelections);
+            } else {
+                // Initialize with default template if no saved selections
+                currentSelections = JSON.parse(JSON.stringify(defaultTemplate));
+            }
+            
+            if (savedTemplate) {
+                defaultTemplate = JSON.parse(savedTemplate);
+            }
+
+            // Apply saved theme
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.querySelector('.theme-toggle i').className = 'fas fa-sun';
+            }
+            
+            loadAgentsTable();
+            compileIDs(); // Show initial output
+
+            // Add event listeners for closing modals on outside click
+            document.getElementById('editAgentsModal').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    closeModal('editAgentsModal');
+                }
+            });
+            document.getElementById('editTemplateModal').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    closeModal('editTemplateModal');
+                }
+            });
+        });
+
+        // Toggle dark/light theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.querySelector('.theme-toggle i');
+            
+            if (body.classList.contains('dark-mode')) {
+                body.classList.remove('dark-mode');
+                themeIcon.className = 'fas fa-moon';
+                localStorage.setItem('dialerTheme', 'light');
+            } else {
+                body.classList.add('dark-mode');
+                themeIcon.className = 'fas fa-sun';
+                localStorage.setItem('dialerTheme', 'dark');
+            }
+        }
+
+        // Load agents into the main table with slot columns
+        function loadAgentsTable() {
+            const tableHeader = document.getElementById('agentsTableHeader');
+            const tableBody = document.getElementById('agentsTableBody');
+            
+            // Create table header
+            tableHeader.innerHTML = `
+                <th>Agent ID</th>
+                <th>Agent Name</th>
+                ${slots.map(slot => `<th>${slot.name}</th>`).join('')}
+            `;
+            
+            // Create table body
+            tableBody.innerHTML = '';
+            
+            defaultAgents.forEach(agent => {
+                const row = document.createElement('tr');
+                
+                // Agent ID and Name
+                row.innerHTML = `
+                    <td>${agent.id}</td>
+                    <td>${agent.name}</td>
+                `;
+                
+                // Add checkboxes for each slot
+                slots.forEach(slot => {
+                    const td = document.createElement('td');
+                    const checkboxId = `checkbox_${agent.id}_${slot.id}`;
+                    
+                    td.innerHTML = `
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="${checkboxId}" 
+                                   onchange="updateSelection('${agent.id}', '${slot.id}', this.checked)"
+                                   ${currentSelections[slot.id].includes(agent.id) ? 'checked' : ''}>
+                        </div>
+                    `;
+                    
+                    row.appendChild(td);
+                });
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Update selection when checkbox is toggled
+        function updateSelection(agentId, slot, isChecked) {
+            if (isChecked) {
+                if (!currentSelections[slot].includes(agentId)) {
+                    currentSelections[slot].push(agentId);
+                }
+            } else {
+                currentSelections[slot] = currentSelections[slot].filter(id => id !== agentId);
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('dialerSelections', JSON.stringify(currentSelections));
+            
+            // Update output
+            compileIDs();
+        }
+
+        // Compile the output
+        function compileIDs() {
+            // Remove duplicates from each slot
+            for (const slot in currentSelections) {
+                currentSelections[slot] = [...new Set(currentSelections[slot])];
+            }
+            
+            // Generate output
+            const output = slots.map(slot => {
+                return `${slot.name}\n\n${currentSelections[slot.id].join(',')}\n`;
+            }).join('\n');
+            
+            document.getElementById('outputContent').textContent = output;
+        }
+
+        // Copy output to clipboard
+        function copyOutput() {
+            const output = document.getElementById('outputContent').textContent.trim();
+            
+            if (!output) {
+                alert('No output to copy. Please compile first.');
+                return;
+            }
+            
+            navigator.clipboard.writeText(output).then(() => {
+                const copyBtn = document.querySelector('.copy-btn');
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy output. Please try again.');
+            });
+        }
+
+        // Clear all selections and reset to defaults
+        function clearSelections() {
+            if (confirm('Are you sure you want to clear all selections? This will reset to default template.')) {
+                currentSelections = JSON.parse(JSON.stringify(defaultTemplate));
+                localStorage.setItem('dialerSelections', JSON.stringify(currentSelections));
+                loadAgentsTable();
+                compileIDs();
+            }
+        }
+
+        // Open edit agents modal
+        function openEditAgentsModal() {
+            const modal = document.getElementById('editAgentsModal');
+            const tableBody = document.getElementById('editAgentsTableBody');
+            tableBody.innerHTML = '';
+            
+            defaultAgents.forEach((agent, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${agent.id}</td>
+                    <td>${agent.name}</td>
+                    <td class="action-icons">
+                        <i class="fas fa-edit action-icon edit-icon" onclick="editAgent(${index})"></i>
+                        <i class="fas fa-trash-alt action-icon delete-icon" onclick="deleteAgent(${index})"></i>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            modal.style.display = 'block';
+        }
+
+        // Open edit template modal
+        function openEditTemplateModal() {
+            const modal = document.getElementById('editTemplateModal');
+            const tableHeader = document.getElementById('editTemplateTableHeader');
+            const tableBody = document.getElementById('editTemplateTableBody');
+            
+            // Create table header
+            tableHeader.innerHTML = `
+                <tr>
+                    <th>Agent ID</th>
+                    <th>Agent Name</th>
+                    ${slots.map(slot => `<th>${slot.name}</th>`).join('')}
+                </tr>
+            `;
+            
+            // Create table body
+            tableBody.innerHTML = '';
+            
+            defaultAgents.forEach(agent => {
+                const row = document.createElement('tr');
+                
+                // Agent ID and Name
+                row.innerHTML = `
+                    <td>${agent.id}</td>
+                    <td>${agent.name}</td>
+                `;
+                
+                // Add checkboxes for each slot
+                slots.forEach(slot => {
+                    const td = document.createElement('td');
+                    const checkboxId = `template_checkbox_${agent.id}_${slot.id}`;
+                    
+                    td.innerHTML = `
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="${checkboxId}" 
+                                   ${defaultTemplate[slot.id].includes(agent.id) ? 'checked' : ''}>
+                        </div>
+                    `;
+                    
+                    row.appendChild(td);
+                });
+                
+                tableBody.appendChild(row);
+            });
+            
+            modal.style.display = 'block';
+        }
+
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Add new agent
+        function addNewAgent() {
+            const idInput = document.getElementById('newAgentId');
+            const nameInput = document.getElementById('newAgentName');
+            
+            const id = idInput.value.trim();
+            const name = nameInput.value.trim();
+            
+            if (!id || !name) {
+                alert('Please enter both Agent ID and Name');
+                return;
+            }
+            
+            if (defaultAgents.some(agent => agent.id === id)) {
+                alert('An agent with this ID already exists');
+                return;
+            }
+            
+            defaultAgents.push({ id, name });
+            localStorage.setItem('dialerAgents', JSON.stringify(defaultAgents));
+            
+            // Update the table
+            const tableBody = document.getElementById('editAgentsTableBody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${id}</td>
+                <td>${name}</td>
+                <td class="action-icons">
+                    <i class="fas fa-edit action-icon edit-icon" onclick="editAgent(${defaultAgents.length - 1})"></i>
+                    <i class="fas fa-trash-alt action-icon delete-icon" onclick="deleteAgent(${defaultAgents.length - 1})"></i>
+                </td>
+            `;
+            tableBody.appendChild(row);
+            
+            // Clear inputs
+            idInput.value = '';
+            nameInput.value = '';
+            
+            // Reload main table
+            loadAgentsTable();
+            compileIDs();
+        }
+
+        // Edit existing agent
+        function editAgent(index) {
+            const agent = defaultAgents[index];
+            const newId = prompt('Edit Agent ID:', agent.id);
+            if (newId === null) return;
+            
+            const newName = prompt('Edit Agent Name:', agent.name);
+            if (newName === null) return;
+            
+            // Update all selections with new ID
+            const oldId = agent.id;
+            agent.id = newId.trim();
+            agent.name = newName.trim();
+            
+            // Update current selections
+            for (const slot in currentSelections) {
+                const index = currentSelections[slot].indexOf(oldId);
+                if (index !== -1) {
+                    currentSelections[slot][index] = newId.trim();
+                }
+            }
+            
+            // Update default template
+            for (const slot in defaultTemplate) {
+                const index = defaultTemplate[slot].indexOf(oldId);
+                if (index !== -1) {
+                    defaultTemplate[slot][index] = newId.trim();
+                }
+            }
+            
+            localStorage.setItem('dialerAgents', JSON.stringify(defaultAgents));
+            localStorage.setItem('dialerSelections', JSON.stringify(currentSelections));
+            localStorage.setItem('dialerTemplate', JSON.stringify(defaultTemplate));
+            
+            // Refresh all tables
+            openEditAgentsModal();
+            loadAgentsTable();
+            compileIDs();
+        }
+
+        // Delete agent
+        function deleteAgent(index) {
+            if (confirm('Are you sure you want to delete this agent? This will remove them from all selections.')) {
+                const agentId = defaultAgents[index].id;
+                defaultAgents.splice(index, 1);
+                
+                // Remove from all selections
+                for (const slot in currentSelections) {
+                    currentSelections[slot] = currentSelections[slot].filter(id => id !== agentId);
+                }
+                
+                // Remove from default template
+                for (const slot in defaultTemplate) {
+                    defaultTemplate[slot] = defaultTemplate[slot].filter(id => id !== agentId);
+                }
+                
+                localStorage.setItem('dialerAgents', JSON.stringify(defaultAgents));
+                localStorage.setItem('dialerSelections', JSON.stringify(currentSelections));
+                localStorage.setItem('dialerTemplate', JSON.stringify(defaultTemplate));
+                
+                // Refresh all tables
+                openEditAgentsModal();
+                loadAgentsTable();
+                compileIDs();
+            }
+        }
+
+        // Save default template
+        function saveDefaultTemplate() {
+            // Get all checkboxes and update the default template
+            const checkboxes = document.querySelectorAll('#editTemplateTableBody input[type="checkbox"]');
+            
+            // Reset the template
+            defaultTemplate = {
+                beforeProMax: [],
+                afterMBB: [],
+                slot1245: [],
+                beforeMY5: [],
+                afterMY5: []
+            };
+            
+            checkboxes.forEach(checkbox => {
+                const parts = checkbox.id.split('_');
+                const agentId = parts[2];
+                const slot = parts[3];
+                
+                if (checkbox.checked) {
+                    defaultTemplate[slot].push(agentId);
+                }
+            });
+            
+            // Remove duplicates
+            for (const slot in defaultTemplate) {
+                defaultTemplate[slot] = [...new Set(defaultTemplate[slot])];
+            }
+            
+            localStorage.setItem('dialerTemplate', JSON.stringify(defaultTemplate));
+            
+            // Close modal
+            closeModal('editTemplateModal');
+        }
+    </script>
+</body>
+</html>
