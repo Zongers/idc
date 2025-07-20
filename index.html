@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dialer IDs Compiler</title>
+<link rel="icon" href="https://i.ibb.co/W48rv8hd/icon.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -17,6 +18,7 @@
             --dark-bg: #333333;
             --dark-border: #444444;
             --dark-text: #e0e0e0;
+            --wee-purple: #9c27b0;
         }
 
         * {
@@ -170,8 +172,16 @@
             z-index: 10;
         }
 
+        th.wee-header {
+            background-color: rgba(156,39,176,0.1);
+        }
+
         body.dark-mode th {
             background-color: rgba(152,204,78,0.2);
+        }
+
+        body.dark-mode th.wee-header {
+            background-color: rgba(156,39,176,0.2);
         }
 
         td {
@@ -196,6 +206,10 @@
             height: 20px;
             cursor: pointer;
             accent-color: var(--primary);
+        }
+
+        .checkbox-container input.wee-checkbox {
+            accent-color: var(--wee-purple);
         }
 
         .output-container {
@@ -243,7 +257,7 @@
         }
 
         .copy-wee-btn {
-            background: #9c27b0;
+            background: var(--wee-purple);
         }
 
         .copy-wee-btn:hover {
@@ -564,7 +578,7 @@
             { id: "slot1245", name: "12:45 Slot" },
             { id: "beforeMY5", name: "Before MY5" },
             { id: "afterMY5", name: "After MY5" },
-            { id: "WEE", name: "WEE IDs" } 
+            { id: "WEE", name: "WEE IDs", isWee: true } 
         ];
 
         let currentSelections = {
@@ -647,7 +661,7 @@
             tableHeader.innerHTML = `
                 <th>Agent ID</th>
                 <th>Agent Name</th>
-                ${slots.map(slot => `<th>${slot.name}</th>`).join('')}
+                ${slots.map(slot => `<th class="${slot.isWee ? 'wee-header' : ''}">${slot.name}</th>`).join('')}
             `;
             
             tableBody.innerHTML = '';
@@ -663,10 +677,12 @@
                 slots.forEach(slot => {
                     const td = document.createElement('td');
                     const checkboxId = `checkbox_${agent.id}_${slot.id}`;
+                    const isWee = slot.id === 'WEE';
                     
                     td.innerHTML = `
                         <div class="checkbox-container">
                             <input type="checkbox" id="${checkboxId}" 
+                                   class="${isWee ? 'wee-checkbox' : ''}"
                                    onchange="updateSelection('${agent.id}', '${slot.id}', this.checked)"
                                    ${currentSelections[slot.id] && currentSelections[slot.id].includes(agent.id) ? 'checked' : ''}>
                         </div>
@@ -716,13 +732,23 @@
                 return;
             }
             
-            // Remove WEE IDs section
-            const outputWithoutWEE = output.split('\n').filter(line => 
-                !line.includes('WEE IDs') && 
-                !(line.trim() === '' && output.split('\n')[output.split('\n').indexOf(line) + 1] === '')
-            ).join('\n');
+            // Split the output into sections
+            const sections = output.split('\n\n');
+            let dialerOutput = '';
             
-            navigator.clipboard.writeText(outputWithoutWEE).then(() => {
+            // We only want sections up to "After MY5"
+            for (let i = 0; i < sections.length; i++) {
+                const section = sections[i];
+                if (section.includes('WEE IDs')) {
+                    break; // Stop when we reach WEE IDs
+                }
+                dialerOutput += section + '\n\n';
+            }
+            
+            // Remove the last empty lines
+            dialerOutput = dialerOutput.trim();
+            
+            navigator.clipboard.writeText(dialerOutput).then(() => {
                 const copyBtn = document.querySelector('.copy-dialer-btn');
                 copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
                 setTimeout(() => {
@@ -742,13 +768,16 @@
                 return;
             }
             
-            // Extract only WEE IDs section
-            const outputLines = output.split('\n');
-            const weeIndex = outputLines.findIndex(line => line.includes('WEE IDs'));
+            // Find the WEE IDs section
+            const sections = output.split('\n\n');
             let weeContent = '';
             
-            if (weeIndex !== -1) {
-                weeContent = outputLines.slice(weeIndex, weeIndex + 3).join('\n');
+            for (let i = 0; i < sections.length; i++) {
+                const section = sections[i];
+                if (section.includes('WEE IDs')) {
+                    weeContent = `WEE IDs\n\n${sections[i+1]}`;
+                    break;
+                }
             }
             
             navigator.clipboard.writeText(weeContent).then(() => {
@@ -802,7 +831,7 @@
                 <tr>
                     <th>Agent ID</th>
                     <th>Agent Name</th>
-                    ${slots.map(slot => `<th>${slot.name}</th>`).join('')}
+                    ${slots.map(slot => `<th class="${slot.isWee ? 'wee-header' : ''}">${slot.name}</th>`).join('')}
                 </tr>
             `;
             
@@ -819,10 +848,12 @@
                 slots.forEach(slot => {
                     const td = document.createElement('td');
                     const checkboxId = `template_checkbox_${agent.id}_${slot.id}`;
+                    const isWee = slot.id === 'WEE';
                     
                     td.innerHTML = `
                         <div class="checkbox-container">
                             <input type="checkbox" id="${checkboxId}" 
+                                   class="${isWee ? 'wee-checkbox' : ''}"
                                    ${defaultTemplate[slot.id] && defaultTemplate[slot.id].includes(agent.id) ? 'checked' : ''}>
                         </div>
                     `;
